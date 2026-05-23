@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111318">
+<title>Weekly Gym Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #111318; --bg2: #1a1d24; --bg3: #20242e; --bg-card: #1e2029;
+    --bg-cardio: #2a1e18; --bg-lift: #18202e; --bg-home: #23200e;
+    --orange: #f07a20; --orange-dim: rgba(240,122,32,0.15);
+    --blue: #4a8fd4; --text: #f0ede8; --text2: #a09890; --text3: #6a6560;
+    --border: rgba(255,255,255,0.07); --radius: 14px; --radius-sm: 8px;
+  }
+  html { background: var(--bg); }
+  body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+  .header { text-align: center; padding: 36px 20px 24px; border-bottom: 1px solid var(--border); }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(28px,7vw,42px); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+  .header-title span { color: var(--orange); margin-right: 10px; font-size: 0.85em; }
+  .header-sub { margin-top: 6px; font-size: 13px; color: var(--text2); }
+  .header-sub b { color: var(--text); font-weight: 500; }
+  .week-badge { display: inline-block; margin-top: 10px; background: var(--orange-dim); color: var(--orange); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; }
+  .day-tabs { display: flex; justify-content: center; gap: 10px; padding: 24px 16px 0; flex-wrap: wrap; }
+  .day-tab { position: relative; padding: 10px 20px; border-radius: 40px; border: none; background: var(--bg3); color: var(--text2); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; min-width: 64px; }
+  .day-tab:hover { background: var(--bg-card); color: var(--text); }
+  .day-tab.active { background: var(--orange); color: #fff; }
+  .today-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: var(--orange); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; }
+  .day-tab.active .today-badge { background: rgba(255,255,255,0.35); }
+  .day-section { padding: 28px 16px 0; max-width: 900px; margin: 0 auto; animation: fadeUp 0.3s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .day-heading { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(24px,6vw,36px); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .day-type { color: var(--orange); }
+  .day-tag { display: inline-block; background: var(--orange-dim); color: var(--orange); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 6px; margin-bottom: 22px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .split { grid-template-columns: 1fr; } }
+  .card { border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
+  .card-cardio { background: var(--bg-cardio); }
+  .card-lift { background: var(--bg-lift); }
+  .card-header { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-cardio .card-header { color: #e05c5c; }
+  .card-lift .card-header { color: var(--blue); }
+  .cardio-activity { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cardio-steps { display: flex; flex-direction: column; gap: 12px; }
+  .cardio-step { display: flex; gap: 10px; align-items: flex-start; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--orange); flex-shrink: 0; margin-top: 5px; }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .step-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .target-hr { margin-top: 14px; background: rgba(240,122,32,0.08); border: 1px solid rgba(240,122,32,0.2); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13px; font-weight: 600; color: var(--orange); display: flex; align-items: center; gap: 8px; }
+  .exercises { display: flex; flex-direction: column; gap: 14px; }
+  .exercise { display: flex; align-items: flex-start; gap: 12px; }
+  .ex-num { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--blue); min-width: 22px; line-height: 1; padding-top: 1px; }
+  .ex-info { flex: 1; }
+  .ex-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ex-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .ex-sets { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+  .home-card { margin-top: 16px; background: var(--bg-home); border: 1px solid rgba(240,180,20,0.15); border-radius: var(--radius); padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+  .home-icon { font-size: 24px; flex-shrink: 0; line-height: 1.2; }
+  .home-title { font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 5px; }
+  .home-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .home-body b { color: var(--text); font-weight: 600; }
+  .tips { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; padding: 30px 20px 8px; border-top: 1px solid var(--border); margin-top: 30px; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .tip { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 7px; }
+  .made-by { text-align: center; font-size: 12px; color: var(--text3); margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title"><span>🏋</span> Weekly Gym Plan</div>
+  <div class="header-sub">Mon–Fri &nbsp;|&nbsp; <b>1 Hour Total</b> · 30 Min Cardio + 30 Min Lifting</div>
+  <div class="week-badge" id="week-label"></div>
+</div>
+
+<div class="day-tabs" id="tabs"></div>
+<div id="content"></div>
+
+<script>
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+function getWeekSeed() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const week = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
+  return now.getFullYear() * 100 + week;
+}
+function pick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
+
+const pools = {
+  MON: {
+    cardio: [
+      { title: 'Treadmill Run/Walk Intervals', steps: [{t:'5 min warm-up walk',s:'Easy pace, 3.0–3.5 mph'},{t:'20 min alternating intervals',s:'2 min jog / 1 min sprint — repeat 6–7 times'},{t:'5 min cool-down walk',s:'Gradually slow to easy pace'}], hr:'Target HR: 65–80% max'},
+      { title: 'Incline Treadmill Walk', steps: [{t:'5 min flat warm-up walk',s:'3.5 mph, no incline'},{t:'20 min incline power walk',s:'Incline 8–12 · speed 3.5–4.0 mph'},{t:'5 min flat cool-down',s:'Drop incline, slow to easy pace'}], hr:'Target HR: 60–75% max'},
+      { title: 'Treadmill Pyramid Run', steps: [{t:'5 min warm-up jog',s:'Comfortable pace, 4.5 mph'},{t:'20 min pyramid speed',s:'Increase 0.5 mph every 2 min, then back down'},{t:'5 min cool-down walk',s:'3.0 mph, relax breathing'}], hr:'Target HR: 70–85% max'},
+    ],
+    slots: [
+      [{n:'Barbell Bench Press',d:'Flat bench · free weights · chest focus',s:'3×10'},{n:'Dumbbell Chest Press',d:'Flat bench · dumbbells · chest & stability',s:'3×12'},{n:'Smith Machine Bench Press',d:'Smith machine · controlled press · chest',s:'3×10'}],
+      [{n:'Incline Dumbbell Press',d:'Upper chest · dumbbells · 30° incline',s:'3×12'},{n:'Incline Barbell Press',d:'Incline bench · barbell · upper chest',s:'3×10'},{n:'Incline Cable Press',d:'Cable machine · low-to-high · upper chest',s:'3×12'}],
+      [{n:'Cable Chest Flyes',d:'Cable machine · inner chest isolation',s:'3×15'},{n:'Dumbbell Pec Flyes',d:'Flat bench · dumbbells · chest stretch',s:'3×15'},{n:'Pec Deck Machine',d:'Machine flye · chest isolation · peak squeeze',s:'3×15'}],
+      [{n:'Tricep Rope Pushdown',d:'Cable machine · triceps lateral head',s:'3×15'},{n:'Tricep Bar Pushdown',d:'Cable machine · straight bar · full tricep',s:'3×15'},{n:'Close-Grip Bench Press',d:'Barbell · triceps compound movement',s:'3×10'}],
+      [{n:'Overhead Tricep Extension',d:'Dumbbell · triceps long head',s:'3×12'},{n:'Skull Crushers',d:'EZ-bar · lying tricep extension · long head',s:'3×12'},{n:'Single-Arm Tricep Kickback',d:'Dumbbell · bench supported · tricep isolation',s:'3×12'}],
+    ],
+    home: [
+      'Try at least 30 minutes of a <b>bodyweight push-up circuit</b> — standard push-ups, wide-grip push-ups, diamond push-ups, and chair dips. 4 rounds of 15 reps each with 30 sec rest.',
+      'Try 30 minutes of <b>push-focused home work</b> — decline push-ups, pike push-ups, tricep dips on a chair, and close-grip push-ups. 4 rounds of 12 reps, 30 sec rest.',
+      'Try a <b>timed push-up ladder</b> — 10, 9, 8... down to 1 rep of push-ups and chair dips, resting only as long as the set took. Repeat the ladder if you finish under 20 min.',
+    ]
+  },
+  TUE: {
+    cardio: [
+      { title: 'Rowing Machine Intervals', steps: [{t:'5 min easy row',s:'Low resistance, focus on form'},{t:'20 min pyramid intervals',s:'1 min hard / 2 min easy — repeat 6–7 times'},{t:'5 min cool-down row',s:'Light resistance, steady breath'}], hr:'Target HR: 65–80% max'},
+      { title: 'Rowing Machine Steady State', steps: [{t:'5 min form warm-up',s:'Resistance 3, slow controlled strokes'},{t:'20 min moderate row',s:'Resistance 6–8 · 22–26 strokes per min'},{t:'5 min easy cool-down',s:'Drop resistance, stretch on the rower'}], hr:'Target HR: 60–75% max'},
+      { title: 'Elliptical Reverse Stride', steps: [{t:'5 min forward warm-up',s:'Light resistance, natural stride'},{t:'20 min reverse stride intervals',s:'2 min high resistance / 1 min low — repeat'},{t:'5 min forward cool-down',s:'Low resistance, gradual slow down'}], hr:'Target HR: 65–80% max'},
+    ],
+    slots: [
+      [{n:'Lat Pulldown',d:'Cable machine · wide grip · lat width',s:'3×12'},{n:'Wide-Grip Pull-Up / Assisted',d:'Pull-up bar or assisted machine · lat width',s:'3×8'},{n:'Straight-Arm Pulldown',d:'Cable machine · lat isolation · stretch & squeeze',s:'3×15'}],
+      [{n:'Seated Cable Row',d:'Cable machine · neutral grip · mid-back thickness',s:'3×12'},{n:'T-Bar Row',d:'T-bar machine · chest supported · back thickness',s:'3×10'},{n:'Bent-Over Barbell Row',d:'Barbell · overhand grip · full back',s:'3×10'}],
+      [{n:'Dumbbell Single-Arm Row',d:'Bench supported · back thickness · unilateral',s:'3×10'},{n:'Single-Arm Cable Row',d:'Cable machine · one arm · mind-muscle focus',s:'3×12'},{n:'Machine Row',d:'Plate-loaded or selectorized row machine',s:'3×12'}],
+      [{n:'Barbell Bicep Curl',d:'EZ-bar or straight bar · full range of motion',s:'3×12'},{n:'Standing Dumbbell Curl',d:'Alternating curls · full supination at top',s:'3×12'},{n:'Preacher Curl',d:'EZ-bar on preacher bench · peak contraction',s:'3×10'}],
+      [{n:'Hammer Curl',d:'Dumbbells · brachialis & forearm thickness',s:'3×15'},{n:'Incline Dumbbell Curl',d:'Incline bench · long head stretch · slow reps',s:'3×12'},{n:'Cable Curl',d:'Cable machine · constant tension throughout',s:'3×15'}],
+    ],
+    home: [
+      'Try 30 minutes of <b>bodyweight pull-focused work</b> — doorframe pull-ups or resistance band rows, towel bicep curls, and inverted rows under a sturdy table. 4 rounds with 30 sec rest.',
+      'Try a <b>resistance band back circuit</b> — band pull-aparts, band rows, band bicep curls, and face pulls. 4 rounds of 15 reps each. No bands? Use a filled backpack for weight.',
+      'Try <b>isometric back holds</b> — Superman holds (3×30s), towel rows under a desk, doorframe rows, and water jug curls. 4 rounds of each, 30 sec rest between exercises.',
+    ]
+  },
+  WED: {
+    cardio: [
+      { title: 'Stationary Bike Intervals', steps: [{t:'5 min easy spin',s:'Low resistance, legs loosening up'},{t:'20 min hill simulation',s:'Alternate 2 min high resistance / 1 min low — repeat'},{t:'5 min cool-down spin',s:'Drop resistance, slow cadence'}], hr:'Target HR: 70–85% max'},
+      { title: 'Stairmaster Steady Climb', steps: [{t:'5 min slow climb',s:'Speed 4–5, find your rhythm'},{t:'20 min moderate pace',s:"Speed 7–9 · keep chest up, don't lean on rails"},{t:'5 min cool-down',s:'Speed 3–4, controlled breathing'}], hr:'Target HR: 65–80% max'},
+      { title: 'Treadmill Incline Walk', steps: [{t:'5 min flat warm-up',s:'3.5 mph, no incline'},{t:'20 min steep incline walk',s:'Incline 10–15 · speed 3.0–3.5 mph · no handrails'},{t:'5 min flat cool-down',s:'Drop incline, easy pace'}], hr:'Target HR: 65–80% max'},
+    ],
+    slots: [
+      [{n:'Barbell Back Squat',d:'Power rack · quads & glutes primary mover',s:'4×8'},{n:'Goblet Squat',d:'Heavy dumbbell or kettlebell · quad focus',s:'4×12'},{n:'Smith Machine Squat',d:'Smith machine · controlled squat · quads',s:'4×10'}],
+      [{n:'Leg Press Machine',d:'Machine · feet shoulder-width · quad focus',s:'3×12'},{n:'Hack Squat Machine',d:'Machine · feet low on plate · quads & glutes',s:'3×10'},{n:'Leg Extension Machine',d:'Machine · quad isolation · full extension',s:'3×15'}],
+      [{n:'Romanian Deadlift',d:'Dumbbells or barbell · hamstrings & glutes',s:'3×10'},{n:'Stiff-Leg Deadlift',d:'Barbell · hamstring stretch · keep back flat',s:'3×10'},{n:'Good Mornings',d:'Barbell · hamstring & lower back · hip hinge',s:'3×12'}],
+      [{n:'Leg Curl Machine',d:'Lying or seated · hamstring isolation',s:'3×15'},{n:'Nordic Hamstring Curl',d:'Decline bench secured · eccentric hamstring',s:'3×8'},{n:'Swiss Ball Hamstring Curl',d:'Stability ball · bodyweight hamstring curl',s:'3×12'}],
+      [{n:'Calf Raise (Smith Machine)',d:'Smith machine or standing calf raise machine',s:'4×20'},{n:'Seated Calf Raise Machine',d:'Machine · soleus focus · slow reps',s:'4×20'},{n:'Leg Press Calf Press',d:'Leg press machine · toes on edge · calf raise',s:'4×20'}],
+    ],
+    home: [
+      'Try 30 minutes of <b>bodyweight leg circuits</b> — squats, jump squats, reverse lunges, glute bridges, and wall sits. 4 rounds of 15–20 reps per move with 30 sec rest between rounds.',
+      'Try a <b>lunge ladder</b> — forward lunges, reverse lunges, lateral lunges, and jump lunges. Start at 10 reps and work up to 20, then back down. Rest 45 sec between rounds.',
+      'Try <b>single-leg focused work</b> — Bulgarian split squats (using a couch), single-leg glute bridges, step-ups on stairs, and pistol squat progressions. 4 rounds of 10 per leg.',
+    ]
+  },
+  THU: {
+    cardio: [
+      { title: 'Elliptical Steady State', steps: [{t:'5 min easy warm-up',s:'Low resistance, natural stride'},{t:'20 min moderate pace',s:'Resistance 6–8 · maintain 130–150 BPM'},{t:'5 min cool-down',s:'Reduce resistance, slow to stop'}], hr:'Target HR: 60–75% max'},
+      { title: 'Treadmill Jog', steps: [{t:'5 min walk warm-up',s:'3.5 mph, easy pace'},{t:'20 min steady jog',s:'5.0–6.5 mph · conversational pace'},{t:'5 min walk cool-down',s:'3.0 mph, deep breathing'}], hr:'Target HR: 60–75% max'},
+      { title: 'Rowing Machine Intervals', steps: [{t:'5 min easy row',s:'Resistance 3, form focus'},{t:'20 min sprint intervals',s:'30 sec all-out / 90 sec easy — repeat 10 times'},{t:'5 min easy cool-down',s:'Low resistance, stretch while seated'}], hr:'Target HR: 70–85% max'},
+    ],
+    slots: [
+      [{n:'Seated Dumbbell Shoulder Press',d:'Dumbbells · full overhead press · all 3 heads',s:'3×12'},{n:'Barbell Overhead Press',d:'Standing or seated · barbell · shoulder compound',s:'3×10'},{n:'Smith Machine Shoulder Press',d:'Smith machine · overhead press · controlled',s:'3×12'}],
+      [{n:'Lateral Raise',d:'Dumbbells · medial delt isolation · slow reps',s:'3×15'},{n:'Cable Lateral Raise',d:'Cable machine · constant tension · single arm',s:'3×15'},{n:'Machine Lateral Raise',d:'Lateral raise machine · isolation · squeeze at top',s:'3×15'}],
+      [{n:'Face Pull',d:'Cable machine · rear delts & rotator cuff health',s:'3×15'},{n:'Reverse Pec Deck',d:'Pec deck reversed · rear delt isolation',s:'3×15'},{n:'Bent-Over Rear Delt Raise',d:'Dumbbells · hinged at hips · rear delts',s:'3×15'}],
+      [{n:'Barbell Shrug',d:'Barbell · trap development · controlled squeeze',s:'3×12'},{n:'Dumbbell Shrug',d:'Dumbbells · traps · full range of motion',s:'3×12'},{n:'Smith Machine Shrug',d:'Smith machine · controlled shrug · trap isolation',s:'3×12'}],
+      [{n:'Cable Crunch',d:'Cable machine · abs · controlled crunch',s:'3×20'},{n:'Hanging Leg Raise',d:'Pull-up bar · lower abs · controlled raise',s:'3×12'},{n:'Ab Wheel Rollout',d:'Ab wheel · full core extension · slow reps',s:'3×10'}],
+    ],
+    home: [
+      'Try 30 minutes of <b>shoulder & core bodyweight work</b> — pike push-ups, side lateral raises with water bottles, plank variations, hollow body holds, and bicycle crunches. 4 rounds, 30 sec rest.',
+      'Try a <b>shoulder burnout circuit</b> — 15 water bottle lateral raises, 15 front raises, 15 overhead presses with a filled backpack, and 30-sec plank. 4 rounds back-to-back.',
+      'Try <b>core-focused home training</b> — 45-sec planks, 20 bicycle crunches, 15 sit-ups, 10 V-ups, and 30-sec side planks each side. 4 rounds with 30 sec rest between.',
+    ]
+  },
+  FRI: {
+    cardio: [
+      { title: 'Stairmaster Intervals', steps: [{t:'5 min easy climb',s:'Speed 4–5, get the legs moving'},{t:'20 min interval climb',s:'Alternate 2 min fast / 1 min slow — repeat'},{t:'5 min slow cool-down',s:'Speed 3, controlled breathing'}], hr:'Target HR: 70–85% max'},
+      { title: 'Treadmill Sprint Intervals', steps: [{t:'5 min jog warm-up',s:'5.0 mph, easy pace'},{t:'20 min sprint intervals',s:'30 sec sprint (9–11 mph) / 90 sec jog — repeat 10x'},{t:'5 min walk cool-down',s:'3.0 mph, catch your breath'}], hr:'Target HR: 80–90% max'},
+      { title: 'Rowing Machine Steady State', steps: [{t:'5 min easy row',s:'Resistance 4, form focus'},{t:'20 min moderate row',s:'Resistance 7 · 24–26 strokes per min · steady effort'},{t:'5 min cool-down',s:'Light resistance, stretch between strokes'}], hr:'Target HR: 65–80% max'},
+    ],
+    slots: [
+      [{n:'Deadlift',d:'Barbell · full posterior chain activation',s:'4×6'},{n:'Trap Bar Deadlift',d:'Hex bar · full body pull · spine-friendly',s:'4×6'},{n:'Sumo Deadlift',d:'Wide stance barbell · glutes & inner thighs',s:'4×6'}],
+      [{n:'Dumbbell Lunges',d:'Walking or stationary · glutes & quads',s:'3×10'},{n:'Bulgarian Split Squat',d:'Rear foot elevated · unilateral leg strength',s:'3×10'},{n:'Step-Up with Dumbbells',d:'Bench or box · unilateral quad & glute',s:'3×12'}],
+      [{n:'Dumbbell Chest Press',d:'Flat bench · upper body compound push',s:'3×10'},{n:'Push Press',d:'Barbell · explosive overhead push · full body',s:'3×8'},{n:'Weighted Dips',d:'Dip bars · chest & tricep compound',s:'3×10'}],
+      [{n:'Cable Row',d:'Cable machine · back & biceps compound',s:'3×12'},{n:'Bent-Over Barbell Row',d:'Full back · overhand or underhand grip',s:'3×10'},{n:'Pull-Up / Lat Pulldown',d:'Full lat & bicep compound · bodyweight or cable',s:'3×8'}],
+      [{n:'Dumbbell Arnold Press',d:'Seated · shoulders · full rotation movement',s:'3×12'},{n:'Barbell Push Press',d:'Explosive press · full delt activation',s:'3×10'},{n:'Seated Lateral Raise',d:'Dumbbells · medial delt finisher · controlled',s:'3×15'}],
+    ],
+    home: [
+      'Try 30 minutes of a <b>full-body bodyweight circuit</b> — burpees, push-ups, jump squats, mountain climbers, and reverse lunges. 5 rounds of 10 reps each with 45 sec rest.',
+      'Try a <b>AMRAP full-body blast</b> — as many rounds as possible in 25 min: 10 push-ups, 15 squats, 10 reverse lunges each leg, 20 mountain climbers. Rest as needed, log your rounds.',
+      'Try a <b>timed full-body tabata</b> — 8 rounds of 20 sec work / 10 sec rest for each: burpees, squat jumps, push-ups, and plank hold. 4 exercises = 16 min, then 5 min stretch.',
+    ]
+  }
+};
+
+const dayNames = {MON:'Monday',TUE:'Tuesday',WED:'Wednesday',THU:'Thursday',FRI:'Friday'};
+const dayTypes = {MON:'Push Day',TUE:'Pull Day',WED:'Leg Day',THU:'Shoulders & Core',FRI:'Full Body'};
+const dayTags  = {MON:'Chest & Triceps',TUE:'Back & Biceps',WED:'Quads, Hamstrings & Glutes',THU:'Delts, Traps & Abs',FRI:'Compound Strength Day'};
+const days = ['MON','TUE','WED','THU','FRI'];
+
+const seed = getWeekSeed();
+const rng = seededRand(seed);
+const weekPlan = {};
+days.forEach(day => {
+  const pool = pools[day];
+  weekPlan[day] = {
+    cardio: pick(pool.cardio, rng),
+    exercises: pool.slots.map(slot => pick(slot, rng)),
+    home: pick(pool.home, rng)
+  };
+});
+
+function getTodayKey() {
+  return {1:'MON',2:'TUE',3:'WED',4:'THU',5:'FRI'}[new Date().getDay()] || null;
+}
+function getWeekLabel() {
+  const now = new Date();
+  const week = Math.floor((now - new Date(now.getFullYear(),0,1)) / (7*24*60*60*1000)) + 1;
+  return `Week ${week} of ${now.getFullYear()} · Refreshes every Monday`;
+}
+
+let active = getTodayKey() || 'MON';
+
+function renderTabs() {
+  const today = getTodayKey();
+  document.getElementById('tabs').innerHTML = days.map(d =>
+    `<button class="day-tab${d===active?' active':''}" onclick="setDay('${d}')">
+      ${d===today?'<span class="today-badge">Today</span>':''}${d}
+    </button>`).join('');
+}
+
+function renderContent() {
+  const p = weekPlan[active];
+  document.getElementById('content').innerHTML = `
+    <div class="day-section">
+      <div style="padding:0 16px;max-width:900px;margin:0 auto;">
+        <div class="day-heading"><span>${dayNames[active]} — </span><span class="day-type">${dayTypes[active]}</span></div>
+        <div class="day-tag">${dayTags[active]}</div>
+        <div class="split">
+          <div class="card card-cardio">
+            <div class="card-header">❤️ Cardio — 30 Min</div>
+            <div class="cardio-activity">${p.cardio.title}</div>
+            <div class="cardio-steps">${p.cardio.steps.map(s=>`
+              <div class="cardio-step"><div class="dot"></div>
+              <div><div class="step-title">${s.t}</div><div class="step-sub">${s.s}</div></div></div>`).join('')}
+            </div>
+            <div class="target-hr">🫀 ${p.cardio.hr}</div>
+          </div>
+          <div class="card card-lift">
+            <div class="card-header">🏆 Lifting — 30 Min</div>
+            <div class="exercises">${p.exercises.map((e,i)=>`
+              <div class="exercise">
+                <div class="ex-num">${i+1}</div>
+                <div class="ex-info"><div class="ex-name">${e.n}</div><div class="ex-detail">${e.d}</div></div>
+                <div class="ex-sets">${e.s}</div>
+              </div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="home-card">
+          <div class="home-icon">🏠</div>
+          <div>
+            <div class="home-title">Can't make it to the gym today?</div>
+            <div class="home-body">${p.home}</div>
+          </div>
+        </div>
+      </div>
+      <div class="tips">
+        <div class="tip"><span>🔥</span> Always warm up before lifting</div>
+        <div class="tip"><span>⏱️</span> Rest 60–90 sec between sets</div>
+        <div class="tip"><span>💧</span> Stay hydrated!</div>
+      </div>
+      <div class="made-by">Made with 💪 for the gym</div>
+    </div>`;
+}
+
+function setDay(d) { active = d; renderTabs(); renderContent(); }
+
+document.getElementById('week-label').textContent = getWeekLabel();
+renderTabs();
+renderContent();
+</script>
+</body>
+</html>
