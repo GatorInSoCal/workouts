@@ -89,9 +89,14 @@ function seededRand(seed) {
 }
 function getWeekSeed() {
   const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const week = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
-  return now.getFullYear() * 100 + week;
+  // Roll back to the most recent Monday
+  const day = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  const diff = (day === 0) ? 6 : day - 1; // days since Monday
+  const monday = new Date(now);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(now.getDate() - diff);
+  // Seed = YYYYMMDD of that Monday — guaranteed to change each Monday
+  return monday.getFullYear() * 10000 + (monday.getMonth() + 1) * 100 + monday.getDate();
 }
 function pick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
 
@@ -215,8 +220,14 @@ function getTodayKey() {
 }
 function getWeekLabel() {
   const now = new Date();
-  const week = Math.floor((now - new Date(now.getFullYear(),0,1)) / (7*24*60*60*1000)) + 1;
-  return `Week ${week} of ${now.getFullYear()} · Refreshes every Monday`;
+  const day = now.getDay();
+  const diff = (day === 0) ? 6 : day - 1;
+  const monday = new Date(now);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(now.getDate() - diff);
+  const mo = monday.toLocaleString('default', { month: 'short' });
+  const d = monday.getDate();
+  return `Week of ${mo} ${d} · Refreshes every Monday`;
 }
 
 let active = getTodayKey() || 'MON';
