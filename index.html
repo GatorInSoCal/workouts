@@ -36,8 +36,7 @@
   .day-heading { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(24px,6vw,36px); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .day-type { color: var(--orange); }
   .day-tag { display: inline-block; background: var(--orange-dim); color: var(--orange); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 6px; margin-bottom: 22px; }
-  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 600px) { .split { grid-template-columns: 1fr; } }
+  .split { display: grid; grid-template-columns: 1fr; gap: 14px; }
   .card { border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
   .card-cardio { background: var(--bg-cardio); }
   .card-lift { background: var(--bg-lift); }
@@ -66,6 +65,12 @@
   .tips { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; padding: 30px 20px 8px; border-top: 1px solid var(--border); margin-top: 30px; max-width: 900px; margin-left: auto; margin-right: auto; }
   .tip { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 7px; }
   .made-by { text-align: center; font-size: 12px; color: var(--text3); margin-top: 14px; }
+  .shuffle-btn { width: 26px; height: 26px; border-radius: 50%; background: rgba(74,143,212,0.12); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; cursor: pointer; color: var(--blue); font-size: 14px; line-height: 1; transition: transform 0.15s, background 0.15s; }
+  .shuffle-btn:hover { background: rgba(74,143,212,0.22); }
+  .shuffle-btn:active { transform: rotate(180deg); }
+  .demo-link-wrap { display: flex; justify-content: center; margin-top: 18px; }
+  .demo-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--orange); font-weight: 600; padding: 8px 16px; border: 1px solid rgba(240,122,32,0.25); border-radius: 20px; background: rgba(240,122,32,0.08); text-decoration: none; }
+  .demo-link:hover { background: rgba(240,122,32,0.16); }
 </style>
 </head>
 <body>
@@ -206,14 +211,31 @@ const days = ['MON','TUE','WED','THU','FRI'];
 const seed = getWeekSeed();
 const rng = seededRand(seed);
 const weekPlan = {};
+const exerciseIndex = {}; // tracks which option (0,1,2) is shown per day+slot
 days.forEach(day => {
   const pool = pools[day];
+  const cardio = pick(pool.cardio, rng);
+  const home = pick(pool.home, rng);
+  const idxArr = pool.slots.map(slot => Math.floor(rng() * slot.length));
+  exerciseIndex[day] = idxArr;
   weekPlan[day] = {
-    cardio: pick(pool.cardio, rng),
-    exercises: pool.slots.map(slot => pick(slot, rng)),
-    home: pick(pool.home, rng)
+    cardio,
+    exercises: pool.slots.map((slot, i) => slot[idxArr[i]]),
+    home
   };
 });
+
+function shuffleExercise(day, slotIndex) {
+  const pool = pools[day];
+  const slot = pool.slots[slotIndex];
+  if (slot.length <= 1) return;
+  let current = exerciseIndex[day][slotIndex];
+  let next;
+  do { next = Math.floor(Math.random() * slot.length); } while (next === current && slot.length > 1);
+  exerciseIndex[day][slotIndex] = next;
+  weekPlan[day].exercises[slotIndex] = slot[next];
+  renderContent();
+}
 
 function getTodayKey() {
   return {1:'MON',2:'TUE',3:'WED',4:'THU',5:'FRI'}[new Date().getDay()] || null;
@@ -264,6 +286,7 @@ function renderContent() {
                 <div class="ex-num">${i+1}</div>
                 <div class="ex-info"><div class="ex-name">${e.n}</div><div class="ex-detail">${e.d}</div></div>
                 <div class="ex-sets">${e.s}</div>
+                <button class="shuffle-btn" onclick="shuffleExercise('${active}', ${i})" aria-label="Shuffle exercise">&#10227;</button>
               </div>`).join('')}
             </div>
           </div>
@@ -280,6 +303,9 @@ function renderContent() {
         <div class="tip"><span>🔥</span> Always warm up before lifting</div>
         <div class="tip"><span>⏱️</span> Rest 60–90 sec between sets</div>
         <div class="tip"><span>💧</span> Stay hydrated!</div>
+      </div>
+      <div class="demo-link-wrap">
+        <a class="demo-link" href="https://yuhonas.github.io/free-exercise-db/" target="_blank" rel="noopener">▶ Watch exercise demos</a>
       </div>
       <div class="made-by">Made with 💪 for the gym</div>
     </div>`;
